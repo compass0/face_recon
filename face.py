@@ -3,6 +3,7 @@ import dlib
 import eos
 import cv2
 import sys
+import os
 
 def read_pts(filename):
     """A helper function to read the 68 ibug landmarks from a .pts file."""
@@ -35,9 +36,9 @@ def visualize_dominant(counts, palette, img) :
 def generate(i, o, mask, root_path) : # input name, output name
     # load detector,shape predictor and image
     detector = dlib.get_frontal_face_detector()
-    shape_predictor = dlib.shape_predictor(root_path + 'res/68.dat')
+    shape_predictor = dlib.shape_predictor(os.path.join(root_path,'res/68.dat'))
     print(i)
-    img = cv2.imread(i + "cropped.png") # i : cropped square image.
+    img = cv2.imread(i) # i : cropped square image.
     image_height, image_width, _ = img.shape
 
     # get bounding box and facial landmarks
@@ -108,7 +109,7 @@ def generate(i, o, mask, root_path) : # input name, output name
         landmarks, landmark_mapper, image_width, image_height, edge_topology, contour_landmarks, model_contour)
 
     # read segmetation mask
-    seg = cv2.imread(i+"mask.png") # 0 : background , 127 : hair, 254 : face // grayscale image
+    seg = cv2.imread(mask) # 0 : background , 127 : hair, 254 : face // grayscale image
     seg = cv2.cvtColor(seg, cv2.COLOR_BGR2GRAY)
     
     # need to up-sample mask so that mask is same size with input image.
@@ -195,8 +196,8 @@ def generate(i, o, mask, root_path) : # input name, output name
     plt.imshow(img)
     plt.show()
     """
-    eos.core.write_textured_obj(mesh, o + ".obj")
-    print(o)
+    eos.core.write_textured_obj(mesh, o[:-4] + ".obj")
+    print(o[:-4])
 
     isomap = cv2.cvtColor(isomap, cv2.COLOR_RGBA2RGB)
     isomap[use_dst] = dst[use_dst] 
@@ -209,7 +210,7 @@ def generate(i, o, mask, root_path) : # input name, output name
 
     isomap = cv2.inpaint(isomap, mask_gray, 21, cv2.INPAINT_TELEA) # kernel size (third parameter) could be lower to reduce time delay.
 
-    cv2.imwrite(i + ".isomap.png", cv2.cvtColor(isomap, cv2.COLOR_RGB2RGBA))
+    cv2.imwrite(i[:-4] + ".isomap.png", cv2.cvtColor(isomap, cv2.COLOR_RGB2RGBA))
 
 if __name__ == "__main__":
     generate(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
